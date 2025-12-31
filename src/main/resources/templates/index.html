@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>тест графаны</title>
+    <script type="text/javascript" src="jquery-3.7.1.min.js"></script>
+    <script>
+        function callApi(url, args) {
+            $.post(url, args, function (result) {
+                $('#info').html(result);
+            }).fail(function (response) {
+                $('#error').html(response.responseText);
+            });
+        }
+    </script>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div><p th:text="${title}">default</p></div>
+<div>
+    <div class="box">
+        <button onclick="callApi('/api/onestart')">Одиночный запуск метода</button>
+    </div>
+    <div class="box">
+        <button onclick="callApi('/api/start')">Многократный запуск метода</button>
+    </div>
+    <div class="box">
+        <button onclick="callApi('/api/stop')">Остановка многократного запуска</button>
+    </div>
+    <div class="box">
+        <button onclick="callApi('/api/wait', {waitTimes: $('#waitTimes').val()})">задержка метода</button>
+        <input name="waitTimes" id="waitTimes" type="number" min="1" max="60" th:value="${waitTimes}"/>
+        раз
+    </div>
+    <div class="box">
+        <button onclick="callApi('/api/crash', {crashTimes: $('#crashTimes').val()})">поломка метода</button>
+        <input name="crashTimes" id="crashTimes" type="number" min="1" max="60" th:value="${crashTimes}"/>
+        раз
+    </div>
+</div>
+<div id="info"></div>
+<div>
+    <p>Информация об ошибках:</p>
+    <div id="error"></div>
+</div>
+</body>
+</html>

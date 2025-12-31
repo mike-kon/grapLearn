@@ -1,0 +1,10 @@
+input[type="number"] {
+    width: 40px;
+}
+.box {
+    display: inline-block;
+    border-color: black;
+    border-style: solid;
+    padding: 10px 10px 10px 10px;
+    border-width: 1px;
+}

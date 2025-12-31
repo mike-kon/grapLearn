@@ -1,0 +1,40 @@
+
+spring:
+  application:
+    name: grapLearn
+
+server:
+  port: 8099
+
+logging:
+  level:
+    com.mikesoft: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+app:
+  short-wait: 1000
+  long-wait: 5000
+  delay-time: 5000
+  metric:
+    prefix: "test_metric"
+    suffix:
+      total-counter-name: total
+      success-counter-name: success
+      failure-counter-name: falure
+      benchmark-name: bench
+      gauge-name: gauge
+      histogram-name: histogram
