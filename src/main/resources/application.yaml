@@ -38,3 +38,4 @@ app:
       benchmark-name: bench
       gauge-name: gauge
       histogram-name: histogram
+      histogram-quantile: 3000, 6000

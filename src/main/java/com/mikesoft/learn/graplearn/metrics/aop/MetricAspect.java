@@ -17,9 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 @Aspect
@@ -40,7 +39,7 @@ public class MetricAspect {
   private String metricPrefix;
 
   private final HashMap<String, Meter> usedMetrics = new HashMap<>();
-  private final Queue<Long> gaugesValues = new ConcurrentLinkedQueue<>();
+  private final AtomicLong gaugesValues = new AtomicLong(0L);
 
   @Around("@annotation(com.mikesoft.learn.graplearn.metrics.annotation.MyMetric)")
   public Object calcMetric(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -57,11 +56,11 @@ public class MetricAspect {
         metricFactory::createTimer, Timer.class);
     Gauge gaugeMetric = createMetric(metric, metricsProperties.getGaugeName(),
         x -> metricFactory.getMetricGauge(x, this::gaugeMeasure), Gauge.class);
+    Timer histogramMetric = createMetric(metric, metricsProperties.getHistogramName(),
+        x -> metricFactory.createHistogram(x, metricsProperties.getHistogramQuantile()), Timer.class);
 
     log.debug("Метрика для метода {}", method.getName());
-    long start = benchMetric != null || gaugeMetric != null
-        ? System.currentTimeMillis()
-        : 0;
+    long start = System.currentTimeMillis();
 
     if (fullMetric != null) {
       fullMetric.increment();
@@ -78,14 +77,15 @@ public class MetricAspect {
       }
       throw throwable;
     } finally {
-      long execTime = benchMetric != null || gaugeMetric != null
-          ? System.currentTimeMillis() - start
-          : 0;
+      long execTime = System.currentTimeMillis() - start;
       if (benchMetric != null) {
         benchMetric.record(execTime, TimeUnit.MILLISECONDS);
       }
       if (gaugeMetric != null) {
-        gaugesValues.add(execTime);
+        gaugesValues.updateAndGet(x -> Math.max(execTime, x));
+      }
+      if (histogramMetric != null) {
+        histogramMetric.record(execTime, TimeUnit.MILLISECONDS);
       }
     }
   }
@@ -107,8 +107,7 @@ public class MetricAspect {
   }
 
   private Long gaugeMeasure() {
-    Long e = gaugesValues.poll();
-    return e != null ? e : 0L;
+    return gaugesValues.getAndSet(0L);
   }
 
   private String getMetricName(MyMetric metric, String suffix) {

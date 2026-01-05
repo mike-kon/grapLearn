@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @ConfigurationProperties(prefix = "app.metric.suffix")
 @Data
@@ -39,4 +41,9 @@ public class MetricsProperties {
    * Счетчик времени выполнения типа Histogram
    */
   private String histogramName;
+
+  /**
+   * Кванитли для гистограммы
+   */
+  List<Long> histogramQuantile;
 }
