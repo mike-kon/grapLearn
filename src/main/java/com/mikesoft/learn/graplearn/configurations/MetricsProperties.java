@@ -43,6 +43,11 @@ public class MetricsProperties {
   private String histogramName;
 
   /**
+   * Счетчик одновременной работы метода.
+   */
+  private String workCounterName;
+
+  /**
    * Кванитли для гистограммы
    */
   List<Long> histogramQuantile;

@@ -36,9 +36,13 @@ public class MetricFactory {
 
   @Contract("null,_ -> null")
   public Gauge getMetricGauge(String name, Supplier<? extends Number> fix) {
-    return name != null
+    Gauge ret = name != null
         ? Gauge.builder(name, fix).register(metricRegistry)
         : null;
+    if (ret != null) {
+      log.info("Created metric Gauge with name {}", name);
+    }
+    return ret;
   }
 
   @Contract("null,_ -> null; _,null -> fail")

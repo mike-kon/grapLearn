@@ -28,7 +28,7 @@ management:
 app:
   short-wait: 1000
   long-wait: 5000
-  delay-time: 5000
+  delay-time: 1500
   metric:
     prefix: "test_metric"
     suffix:
@@ -39,3 +39,4 @@ app:
       gauge-name: gauge
       histogram-name: histogram
       histogram-quantile: 3000, 6000
+      work-counter-name: worker

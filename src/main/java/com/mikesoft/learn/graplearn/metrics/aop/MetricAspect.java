@@ -40,6 +40,7 @@ public class MetricAspect {
 
   private final HashMap<String, Meter> usedMetrics = new HashMap<>();
   private final AtomicLong gaugesValues = new AtomicLong(0L);
+  private final AtomicLong workCounter = new AtomicLong(0L);
 
   @Around("@annotation(com.mikesoft.learn.graplearn.metrics.annotation.MyMetric)")
   public Object calcMetric(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -58,6 +59,8 @@ public class MetricAspect {
         x -> metricFactory.getMetricGauge(x, this::gaugeMeasure), Gauge.class);
     Timer histogramMetric = createMetric(metric, metricsProperties.getHistogramName(),
         x -> metricFactory.createHistogram(x, metricsProperties.getHistogramQuantile()), Timer.class);
+    createMetric(metric, metricsProperties.getWorkCounterName(),
+        x -> metricFactory.getMetricGauge(x, this::workCounterMeasure), Gauge.class);
 
     log.debug("Метрика для метода {}", method.getName());
     long start = System.currentTimeMillis();
@@ -66,12 +69,17 @@ public class MetricAspect {
       fullMetric.increment();
     }
     try {
-      Object ret = joinPoint.proceed();
+      Long n = workCounter.incrementAndGet();
+      log.debug("start joinPoint.proceed():{}", n);
+      joinPoint.proceed();
+      Long n1 = workCounter.decrementAndGet();
+      log.debug("end joinPoint.proceed():{}", n1);
       if (successMetric != null) {
         successMetric.increment();
       }
-      return ret;
+      return null;
     } catch (Throwable throwable) {
+      workCounter.decrementAndGet();
       if (failureMetric != null) {
         failureMetric.increment();
       }
@@ -106,10 +114,6 @@ public class MetricAspect {
     }
   }
 
-  private Long gaugeMeasure() {
-    return gaugesValues.getAndSet(0L);
-  }
-
   private String getMetricName(MyMetric metric, String suffix) {
     if (metric != null && metric.enabled() && Strings.isNotBlank(suffix)) {
       return METRIC_FORMAT.formatted(metricPrefix, metric.name(), suffix);
@@ -118,4 +122,11 @@ public class MetricAspect {
     }
   }
 
+  private Long gaugeMeasure() {
+    return gaugesValues.getAndSet(0L);
+  }
+
+  private Long workCounterMeasure() {
+    return workCounter.get();
+  }
 }
